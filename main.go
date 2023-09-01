@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -25,20 +26,28 @@ func main() {
 
 	// Set client options
 	mongoUri := os.Getenv("database_address")
+	if mongoUri == "" {
+		port := os.Getenv("MONGODB_PORT_NUMBER")
+		if port == "" {
+			log.Fatalln("MONGODB_PORT_NUMBER MISSING!")
+		}
+		mongoUri = fmt.Sprintf("mongodb://localhost:%s", port)
+	}
+
 	clientOptions := options.Client().ApplyURI(mongoUri)
 
-	ctx1, cancel := context.WithTimeout(context.TODO(), time.Millisecond*500)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Millisecond*500)
 	defer cancel()
 
 	// Connect to MongoDB
-	client, err := mongo.Connect(ctx1, clientOptions)
+	client, err := mongo.Connect(ctx, clientOptions)
 
 	if err != nil {
 		logger.Fatal(err)
 	}
 
 	// Check the connection
-	err = client.Ping(ctx1, nil)
+	err = client.Ping(ctx, nil)
 
 	if err != nil {
 		logger.Fatal(err)
